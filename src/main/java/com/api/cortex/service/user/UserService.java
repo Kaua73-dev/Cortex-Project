@@ -10,6 +10,7 @@ import com.api.cortex.model.dto.response.user.UserLoginResponse;
 import com.api.cortex.model.dto.response.user.UserRegisterResponse;
 import com.api.cortex.model.entity.user.User;
 import com.api.cortex.model.repository.user.UserRepository;
+import com.api.cortex.service.email.EmailService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -23,28 +24,32 @@ public class UserService {
     private final TokenConfig tokenConfig;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
 
-    public UserService(UserRepository userRepository, TokenConfig tokenConfig, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, TokenConfig tokenConfig, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder, EmailService emailService) {
         this.userRepository = userRepository;
         this.tokenConfig = tokenConfig;
         this.authenticationManager = authenticationManager;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
 
     public UserRegisterResponse register(UserRegisterRequest request){
         if(userRepository.findByEmail(request.email()).isPresent()){
-            throw new UserAlreadyExistException();
+             throw new UserAlreadyExistException();
         }
 
         User user = new User();
         user.setName(request.name());
         user.setEmail(request.email());
         user.setPassword(passwordEncoder.encode(request.password()));
-        User userSave = userRepository.save(user);
 
-        return new UserRegisterResponse(userSave.getName(), userSave.getEmail());
+        User userSave = userRepository.save(user);
+        emailService.emailRegister(user.getEmail());
+
+        return new UserRegisterResponse(userSave.getName(), user.getEmail());
 
     }
 
@@ -60,9 +65,6 @@ public class UserService {
 
         String token = tokenConfig.generateToken(user);
         return new UserLoginResponse(token);
-
-
-
     }
 
 
