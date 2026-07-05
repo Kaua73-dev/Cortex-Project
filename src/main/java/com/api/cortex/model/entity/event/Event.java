@@ -1,4 +1,4 @@
-package com.api.cortex.model.entity.user;
+package com.api.cortex.model.entity.event;
 
 
 import jakarta.persistence.*;
@@ -8,21 +8,13 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@Table(name="user")
-public class User {
-
+@Table(name = "event")
+public class Event {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    private String name;
-
-    @Column(unique = true)
-    private String email;
-
-    private String password;
 
 
 }
-
